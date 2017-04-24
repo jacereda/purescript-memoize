@@ -13,6 +13,7 @@ import Data.List ((:), length, singleton)
 import Data.String (take, drop)
 import Test.QuickCheck (quickCheck')
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
+import Test.Assert (ASSERT, assert')
 
 data Diff a = Add a | Remove a
 
@@ -24,14 +25,7 @@ data Ints
   = Int1 Int
   | Int2 Int
 
-instance genericInts :: G.Generic Ints
-                        (G.Sum
-                         (G.Constructor "Int1" (G.Argument Int))
-                         (G.Constructor "Int2" (G.Argument Int))) where
-  to (G.Inl (G.Constructor (G.Argument x))) = Int1 x
-  to (G.Inr (G.Constructor (G.Argument x))) = Int2 x
-  from (Int1 x) = G.Inl (G.Constructor (G.Argument x))
-  from (Int2 x) = G.Inr (G.Constructor (G.Argument x))  
+derive instance genericInts :: G.Generic Ints _
 
 instance tabulateInts :: Tabulate Ints where
   tabulate = genericTabulate
@@ -42,7 +36,7 @@ newtype SmallInt = SmallInt Int
 instance arbSmallInt :: Arbitrary SmallInt where
   arbitrary = SmallInt <<< (_ `mod` 1000) <$> arbitrary
 
-main :: forall eff. Eff (ref :: REF, console :: CONSOLE, random :: RANDOM, exception :: EXCEPTION | eff) Unit
+main :: forall eff. Eff (assert :: ASSERT, ref :: REF, console :: CONSOLE, random :: RANDOM, exception :: EXCEPTION | eff) Unit
 main = do
   let fibonacciFast = go 0 1
         where
@@ -89,5 +83,4 @@ main = do
         pure $ fn n
   quickCheck' 10000 $ \(SmallInt x) -> fn x == msin x
   ncalled <- readRef called
-  quickCheck' 1 $ ncalled < 2000
-  pure unit
+  assert' "Memoized function called too many times" (ncalled < 2000) 
