@@ -8,7 +8,7 @@ import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Eff.Ref (REF, newRef, modifyRef, readRef)
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
-import Data.Function.Memoize (class Tabulate, memoize, memoize2, gTabulate)
+import Data.Function.Memoize (class Tabulate, memoize, memoize2, genericTabulate)
 import Data.List ((:), length, singleton)
 import Data.String (take, drop)
 import Test.QuickCheck (quickCheck')
@@ -34,7 +34,7 @@ instance genericInts :: G.Generic Ints
   from (Int2 x) = G.Inr (G.Constructor (G.Argument x))  
 
 instance tabulateInts :: Tabulate Ints where
-  tabulate = gTabulate
+  tabulate = genericTabulate
 
 
 newtype SmallInt = SmallInt Int
@@ -42,7 +42,7 @@ newtype SmallInt = SmallInt Int
 instance arbSmallInt :: Arbitrary SmallInt where
   arbitrary = SmallInt <<< (_ `mod` 1000) <$> arbitrary
 
-main :: forall eff. Eff (ref :: REF, console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) Unit
+main :: forall eff. Eff (ref :: REF, console :: CONSOLE, random :: RANDOM, exception :: EXCEPTION | eff) Unit
 main = do
   let fibonacciFast = go 0 1
         where
